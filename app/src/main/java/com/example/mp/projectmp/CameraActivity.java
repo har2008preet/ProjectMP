@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
+import com.example.mp.projectmp.interfaces.CameraInterface;
 import com.example.mp.projectmp.interfaces.CurrentFlashState;
 import com.example.mp.projectmp.interfaces.FinishActivityInterface;
 import com.example.mp.projectmp.interfaces.ProgressBarToggle;
@@ -21,7 +22,7 @@ import com.google.firebase.storage.StorageReference;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CameraActivity extends AppCompatActivity implements CurrentFlashState, ProgressBarToggle, FinishActivityInterface{
+public class CameraActivity extends AppCompatActivity implements CurrentFlashState, ProgressBarToggle, FinishActivityInterface, CameraInterface{
 
     private Camera mCamera;
     private CameraPreview mCameraPreview;
@@ -36,6 +37,8 @@ public class CameraActivity extends AppCompatActivity implements CurrentFlashSta
     ImageView flashImg;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
+    @BindView(R.id.rotate)
+    ImageView rotate;
 
     private CameraPreview cameraPreview;
 
@@ -43,6 +46,8 @@ public class CameraActivity extends AppCompatActivity implements CurrentFlashSta
     private int previewHeight = 720;
 
     int currentFlash = 0;
+
+    boolean frontCamera = false;
 
     FirebaseStorage storage;
     StorageReference imagesRef;
@@ -59,7 +64,7 @@ public class CameraActivity extends AppCompatActivity implements CurrentFlashSta
 
         SurfaceHolder camHolder = camView.getHolder();
 
-        cameraPreview = new CameraPreview(getBaseContext(),previewWidth, previewHeight, this,this,this);
+        cameraPreview = new CameraPreview(getBaseContext(),previewWidth, previewHeight, this,this,this,this);
 
         camHolder.addCallback(cameraPreview);
         camHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -79,6 +84,14 @@ public class CameraActivity extends AppCompatActivity implements CurrentFlashSta
             @Override
             public void onClick(View v) {
                 cameraPreview.changeFlash(currentFlash);
+            }
+        });
+
+        rotate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                frontCamera = !frontCamera;
+                cameraPreview.changeCamera(frontCamera);
             }
         });
     }
@@ -121,5 +134,10 @@ public class CameraActivity extends AppCompatActivity implements CurrentFlashSta
     @Override
     public void activityClose() {
         finish();
+    }
+
+    @Override
+    public void cameraFace(boolean isFrontCamera) {
+        frontCamera = isFrontCamera;
     }
 }

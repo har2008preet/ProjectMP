@@ -17,10 +17,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -33,6 +35,7 @@ import android.widget.ImageView;
 import com.example.mp.projectmp.CameraActivity;
 import com.example.mp.projectmp.ImagePreviewActivity;
 import com.example.mp.projectmp.R;
+import com.example.mp.projectmp.interfaces.CameraInterface;
 import com.example.mp.projectmp.interfaces.CurrentFlashState;
 import com.example.mp.projectmp.interfaces.FinishActivityInterface;
 import com.example.mp.projectmp.interfaces.ProgressBarToggle;
@@ -65,7 +68,11 @@ public class CameraPreview
 
     FinishActivityInterface finishActivityInterface;
 
-    public CameraPreview(Context context, int width, int height, CurrentFlashState currentFlashState, ProgressBarToggle toggle, FinishActivityInterface finishActivityInterface) {
+    CameraInterface cameraInterface;
+
+    boolean isFrontCamera;
+
+    public CameraPreview(Context context, int width, int height, CurrentFlashState currentFlashState, ProgressBarToggle toggle, FinishActivityInterface finishActivityInterface, CameraInterface cameraInterface) {
         Log.i("campreview", "Width = " + String.valueOf(width));
         Log.i("campreview", "Height = " + String.valueOf(height));
         previewWidth = width;
@@ -74,16 +81,17 @@ public class CameraPreview
         this.currentFlashState = currentFlashState;
         this.pbToggle = toggle;
         this.finishActivityInterface = finishActivityInterface;
+        this.cameraInterface = cameraInterface;
 
         pbToggle.interfacePB(View.INVISIBLE);
     }
 
-    private int openCamera() {
+    private int openCamera(int cameraFacingBack) {
         if (isCamOpen == 1) {
             releaseCamera();
         }
 
-        mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+        mCamera = Camera.open(cameraFacingBack);
 
         if (mCamera == null) {
             return -1;
@@ -138,6 +146,19 @@ public class CameraPreview
         }
     };
 
+    public void changeCamera(boolean frontCamera) {
+        releaseCamera();
+        if(frontCamera) {
+            isFrontCamera = true;
+            openCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            mCamera.setDisplayOrientation(90);
+        }else{
+            isFrontCamera = false;
+            openCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
+
+        }
+    }
+
     public class SaveImage extends AsyncTask<Void, Void, Void> {
         File pictureFile;
         byte[] data;
@@ -158,7 +179,13 @@ public class CameraPreview
 
             try {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
-                Bitmap raw = RotateBitmap(ByteArrayToBitmap(data), 90);
+                Bitmap raw;
+                if(!isFrontCamera) {
+                    raw = RotateBitmap(ByteArrayToBitmap(data), 90);
+                }else{
+                    raw = RotateBitmap(ByteArrayToBitmap(data), -90);
+                    raw = flip(raw);
+                }
                 raw.compress(Bitmap.CompressFormat.PNG, 100, fos);
 //                fos.write(data);
                 fos.close();
@@ -179,6 +206,15 @@ public class CameraPreview
             context.startActivity(intent);
             finishActivityInterface.activityClose();
         }
+    }
+
+    Bitmap flip(Bitmap src)
+    {
+        Matrix m = new Matrix();
+        m.preScale(-1, 1);
+        Bitmap dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, false);
+        dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
+        return dst;
     }
 
     public static Bitmap RotateBitmap(Bitmap source, float angle)
@@ -227,7 +263,7 @@ public class CameraPreview
     public void surfaceCreated(SurfaceHolder holder) {
         sHolder = holder;
 
-        isCamOpen = openCamera();
+        isCamOpen = openCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
     }
 
     @Override

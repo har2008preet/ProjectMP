@@ -58,9 +58,15 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="center"
-            android:layout_marginRight="10dp"
             android:padding="10dp"
             android:src="@drawable/flash_auto" />
+        <ImageView
+            android:id="@+id/rotate"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="10dp"
+            android:layout_marginRight="10dp"
+            android:src="@drawable/rotate"/>
 
     </LinearLayout>
 
