@@ -1,5 +1,7 @@
 package com.example.mp.projectmp;
 
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.mp.projectmp.interfaces.CameraInterface;
 import com.example.mp.projectmp.interfaces.CurrentFlashState;
@@ -87,15 +90,42 @@ public class CameraActivity extends AppCompatActivity implements CurrentFlashSta
             }
         });
 
+        SharedPreferences prefs = getSharedPreferences("CAMERAFACE", MODE_PRIVATE);
+        int cameraFace = prefs.getInt("face", 0);
+        cameraPreview.changeCamera(cameraFace);
+        if(cameraFace==0){
+            frontCamera=false;
+        }else{
+            frontCamera=true;
+        }
+
         rotate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 frontCamera = !frontCamera;
-                cameraPreview.changeCamera(frontCamera);
+                if(frontCamera){
+                    cameraPreview.changeCamera(1);
+                }else {
+                    cameraPreview.changeCamera(0);
+                }
             }
         });
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        SharedPreferences prefs = getSharedPreferences("CAMERAFACE", MODE_PRIVATE);
+        int cameraFace = prefs.getInt("face", 0);
+        cameraPreview.changeCamera(cameraFace);
+        if(cameraFace==0){
+            frontCamera=false;
+        }else{
+            frontCamera=true;
+        }
+
+    }
     /**
      * Helper method to access the camera returns null if it cannot get the
      * camera or does not exist

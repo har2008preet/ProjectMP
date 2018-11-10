@@ -12,6 +12,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -40,6 +41,7 @@ import com.example.mp.projectmp.interfaces.CurrentFlashState;
 import com.example.mp.projectmp.interfaces.FinishActivityInterface;
 import com.example.mp.projectmp.interfaces.ProgressBarToggle;
 
+import static android.content.Context.MODE_PRIVATE;
 import static android.content.Context.WINDOW_SERVICE;
 
 public class CameraPreview
@@ -146,15 +148,21 @@ public class CameraPreview
         }
     };
 
-    public void changeCamera(boolean frontCamera) {
+    public void changeCamera(int isfrontCamera) {
         releaseCamera();
-        if(frontCamera) {
+        if(isfrontCamera==1) {
             isFrontCamera = true;
             openCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
             mCamera.setDisplayOrientation(90);
+            SharedPreferences.Editor editor = context.getSharedPreferences("CAMERAFACE", MODE_PRIVATE).edit();
+            editor.putInt("face", Camera.CameraInfo.CAMERA_FACING_FRONT);
+            editor.apply();
         }else{
             isFrontCamera = false;
             openCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
+            SharedPreferences.Editor editor = context.getSharedPreferences("CAMERAFACE", MODE_PRIVATE).edit();
+            editor.putInt("face", Camera.CameraInfo.CAMERA_FACING_BACK);
+            editor.apply();
 
         }
     }
@@ -263,7 +271,10 @@ public class CameraPreview
     public void surfaceCreated(SurfaceHolder holder) {
         sHolder = holder;
 
-        isCamOpen = openCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
+        SharedPreferences prefs = context.getSharedPreferences("CAMERAFACE", MODE_PRIVATE);
+        int cameraFace = prefs.getInt("face", 0);
+
+        isCamOpen = openCamera(cameraFace);
     }
 
     @Override
